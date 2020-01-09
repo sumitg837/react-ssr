@@ -1,33 +1,44 @@
-const path = require('path')
-const webpackNodeExternals = require('webpack-node-externals');
+const webpack = require('webpack');
+const path = require('path');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
-    target: 'node',
-    entry: "./server.js",
+    name: 'SSR',
+    entry: './server.js',
     output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, 'build'),
-        publicPath: '/build'
+        path: path.resolve(__dirname, 'bundle'),
+        publicPath: '/bundle/'
     },
-    module:{
+    target: 'node',
+    externals: nodeExternals(),
+    resolve: {
+        extensions: ['.js', '.jsx', '.css'],
+    },
+    module: {
         rules: [
             {
-                test: /\.js$/,
-                loader: 'babel-loader',
-                exclude: '/node_modules/',
-                options:{
-                    presets: [
-                        'react',
-                        'stage-0',
-                        ['env', {
-                            target: {
-                                browsers: ['last 2 versions']
-                            }
-                        }]
-                    ]
-                }
+                test: /\.jsx?$/,
+                exclude: /(node_modules|bower_components|public\/)/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        babelrc: true,
+                    },
+                },
+            },
+            {
+                test: /\.css$/,
+                loader: 'css-loader'
             }
-        ]
+        ],
     },
-    externals: [webpackNodeExternals()]
-}
+    plugins: [
+        new webpack.ProvidePlugin({
+            "React": "react",
+        }),
+        new webpack.DefinePlugin({
+            __isBrowser__: "false"
+        })
+    ],
+};
